@@ -10,11 +10,18 @@ router.get('/', async (req, res) => {
 	console.log("page hit");
 	
 	try {
+		let total = 0;
 		const result = await dbModel.getAllUsers();
-		res.render('index', {allUsers: result});
+		for (let i = 0; i < result.length; i++) {
+			const num = Number(result[i].cost) * result[i].quantity
+			
+			total += num;
+		}
+		
+		res.render('index', {allItems: result, total});
 
 		//Output the results of the query to the Heroku Logs
-		console.log(result);
+		console.log('result: ', result);
 	}
 	catch (err) {
 		res.render('error', {message: 'Error reading from MySQL'});
@@ -22,11 +29,11 @@ router.get('/', async (req, res) => {
 	}
 });
 
-router.post('/addUser', async (req, res) => {
+router.post('/addItem', async (req, res) => {
 	console.log("form submit");
 	console.log("req.body log: ", req.body);
 	try {
-	const success = await dbModel.addUser(req.body);
+	const success = await dbModel.addItem(req.body);
 	if (success) {
 	res.redirect("/");
 	}
@@ -86,20 +93,45 @@ router.post('/addUser', async (req, res) => {
 			}
 		})
 
-		router.get('/deleteBook', async(req, res) => {
+		router.get('/addQuantity', async(req, res) => {
+			console.log(req.query)
+			
+			const result = await dbModel.addQuantity(req.query);
+
+			if (result === true) {
+				res.redirect("/");
+			} else {
+				res.render('error', {message: 'Error writing to MySQL'});
+				console.log("Error writing to mysql");
+				console.log(err);
+			}
+		})
+		
+		router.get('/downQuantity', async(req, res) => {
+			console.log(req.query)
+			
+			const result = await dbModel.downQuantity(req.query);
+
+			if (result === true) {
+				res.redirect("/");
+			} else {
+				res.render('error', {message: 'Error writing to MySQL'});
+				console.log("Error writing to mysql");
+				console.log(err);
+			}
+		})
+
+		router.get('/deleteItem', async(req, res) => {
 			console.log("delete Book");
 			console.log(req.query);
-			let bookId = req.query.id;
-			if (bookId) {
-			const success = await dbModel.deleteBook(bookId);
-			if (success) {
+			const success = await dbModel.deleteItem(req.query);
+			if (success === true) {
 			res.redirect("/");
 			}
 			else {
 			res.render('error', {message: 'Error writing to MySQL'});
 			console.log("Error writing to mysql");
 			console.log(err);
-			}
 			}
 		})
 

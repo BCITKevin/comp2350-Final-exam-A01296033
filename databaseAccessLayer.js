@@ -2,15 +2,15 @@ const database = include('/databaseConnection');
 
 async function getAllUsers() {
     let sqlQuery = `
-        SELECT 
-        author_id,
-        first_name,
-        last_name,
-        DATE_FORMAT(birth_date, '%M, %d %Y') AS 'Birth_Date', 
-        (SELECT COUNT(*) FROM book WHERE book.author_id = author.author_id) AS 'num_of_books' 
-        FROM author;
+        SELECT
+        purchase_item_id,
+        item_name,
+        item_description,
+        cost,
+        quantity
+        FROM purchase_item;
     `;
-    
+    // (SELECT COUNT(*) FROM book WHERE book.author_id = author.author_id) AS 'num_of_books' 
     try {
         const results = await database.query(sqlQuery);
         console.log("-----------------------")
@@ -25,46 +25,88 @@ async function getAllUsers() {
     }
 }
 
-async function addUser(postData) {
-    console.log("postData: ", postData);
+async function addQuantity(id) {
+    console.log('id: ', id)
 
     let sqlInsertSalt = `
-        INSERT INTO author (first_name, last_name, birth_date)
-        VALUES (:first_name, :last_name, :birth_date);
+        UPDATE purchase_item
+        SET quantity = quantity + 1
+        WHERE purchase_item_id = :purchase_item_id
     `;
 
     let params = {
-        first_name: postData.first_name,
-        last_name: postData.last_name,
-        birth_date: postData.birth_date,
-    };
+        purchase_item_id: id.id
+    }
 
-    console.log(sqlInsertSalt);
+    console.log(sqlInsertSalt)
 
     try {
-        const results = await database.query(sqlInsertSalt, params);
-        // console.log('result: ', results);
-        // let insertedID = results.insertId;
-        // let updatePasswordHash = `
-        //     UPDATE author
-        //     SET password_hash = sha2(concat(:password,:pepper,password_salt),512)
-        //     WHERE web_user_id = :userId;
-        // `;
-
-        // let params2 = {
-        //     userId: insertedID
-        // };
-
-        // console.log(updatePasswordHash);
-
-        // const results2 = await database.query(updatePasswordHash, params2);
-
+        const result = await database.query(sqlInsertSalt, params);
         return true;
     }
     catch (err) {
         console.log(err);
         return false;
     }
+}
+
+async function downQuantity(id) {
+    console.log('id: ', id)
+
+    let sqlInsertSalt = `
+        UPDATE purchase_item
+        SET quantity = quantity - 1
+        WHERE purchase_item_id = :purchase_item_id
+    `;
+
+    let params = {
+        purchase_item_id: id.id
+    }
+
+    console.log(sqlInsertSalt)
+
+    try {
+        const result = await database.query(sqlInsertSalt, params);
+        return true;
+    }
+    catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function addItem(postData) {
+    console.log("postData: ", postData);
+
+    let sqlInsertSalt = `
+        INSERT INTO purchase_item (item_name, item_description, cost, quantity)
+        VALUES (:item_name, :item_description, :cost, :quantity);
+    `;
+
+    let params = {
+        item_name: postData.name,
+        item_description: postData.description,
+        cost: postData.cost,
+        quantity: postData.quantity,
+    };
+
+    console.log(sqlInsertSalt);
+
+    try {
+        const results = await database.query(sqlInsertSalt, params);
+        return true;
+    }
+    catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function totalAmount(result) {
+    for (let i = 0; i < array.result; i++) {
+		const total = result[i].cost * result[i].quantity
+		return total;
+	}
 }
 
 async function deleteUser(webUserId) {
@@ -79,6 +121,26 @@ async function deleteUser(webUserId) {
     console.log(sqlDeleteUser);
     try {
         await database.query(sqlDeleteUser, params);
+        return true;
+    }
+    catch (err) {
+        console.log(err);
+        return false;
+    }
+}
+
+async function deleteItem(id) {
+    console.log('Id?: ', id);
+    let sqlDeleteItem = `
+        DELETE FROM purchase_item
+        WHERE purchase_item_id = :item_id
+    `;
+    let params = {
+        item_id: id.id
+    };
+    console.log(sqlDeleteItem);
+    try {
+        await database.query(sqlDeleteItem, params);
         return true;
     }
     catch (err) {
@@ -177,4 +239,4 @@ async function deleteBook(bookId) {
     }
 }
 
-module.exports = { getAllUsers, addUser, deleteUser, showBooks, addBook, deleteBook, get_user_by_userId };
+module.exports = { getAllUsers, addItem, deleteItem, showBooks, addBook, deleteBook, get_user_by_userId, totalAmount, addQuantity, downQuantity };
