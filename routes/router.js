@@ -65,7 +65,7 @@ router.post('/addUser', async (req, res) => {
 				const authorName = await dbModel.get_user_by_userId(authorId);
 				const success = await dbModel.showBooks(authorId);
 				console.log('showBooks: ', success);
-				res.render('showBooks', {allBooks: success, authorName});
+				res.render('showBooks', {allBooks: success, authorName, authorId: authorId});
 			}
 		})
 		
